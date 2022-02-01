@@ -10,6 +10,9 @@ import (
 	"go.uber.org/zap"
 )
 
+// build is the git version of this program. It is set using build flags in the makefile.
+var build = "develop"
+
 func main() {
 
 	// Construct the application logger.
@@ -29,8 +32,8 @@ func main() {
 }
 
 func run(log *zap.SugaredLogger) error {
-	log.Infow("startup", "hi my logging is working")
-	defer log.Infow("startup", "now I'm shutting down")
+	log.Infow("startup", "msg", "hi my logging is working", "build", build)
+	defer log.Infow("startup", "msg", "now I'm shutting down")
 
 	shutdown := make(chan os.Signal, 1)
 	signal.Notify(shutdown, syscall.SIGINT, syscall.SIGTERM)
