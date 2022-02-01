@@ -41,6 +41,11 @@ kind-load:
 kind-apply:
 	kustomize build zarf/k8s/kind/sales-pod | kubectl apply -f -
 
+kind-restart:
+	kubectl rollout restart deployment sales-pod
+
+kind-update: all kind-load kind-restart
+
 kind-logs-sales:
 	kubectl logs -l app=sales --all-containers=true -f --tail=100 | go run app/tooling/logfmt/main.go -service=SALES-API
 
@@ -51,6 +56,9 @@ kind-status:
 
 kind-status-sales:
 	kubectl get pods -o wide --watch --namespace=sales-system
+
+kind-describe-deployment:
+	kubectl describe deployment sales-pod
 
 # ==============================================================================
 # Local Stuff
