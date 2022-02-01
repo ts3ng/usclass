@@ -70,6 +70,9 @@ run:
 down:
 	kill -INT $(shell ps | grep go-build | grep -v grep | sed -n 2,2p | cut -c1-5)
 
+help:
+	go run app/services/sales-api/main.go --help	
+
 # ==============================================================================
 # Modules support
 
