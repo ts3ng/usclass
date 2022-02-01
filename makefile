@@ -29,7 +29,8 @@ KIND_CLUSTER := ardan-starter-cluster
 kind-up:
 	kind create cluster \
 		--image kindest/node:v1.23.0@sha256:49824ab1727c04e56a21a5d8372a402fcd32ea51ac96a2706a12af38934f81ac \
-		--name $(KIND_CLUSTER)
+		--name $(KIND_CLUSTER) \
+	kubectl config set-context --current --namespace=sales-system
 
 kind-down:
 	kind delete cluster --name $(KIND_CLUSTER)
@@ -40,10 +41,16 @@ kind-load:
 kind-apply:
 	kustomize build zarf/k8s/kind/sales-pod | kubectl apply -f -
 
+kind-logs-sales:
+	kubectl logs -l app=sales --all-containers=true -f --tail=100 | go run app/tooling/logfmt/main.go -service=SALES-API
+
 kind-status:
 	kubectl get nodes -o wide
 	kubectl get svc -o wide
 	kubectl get pods -o wide --watch --all-namespaces
+
+kind-status-sales:
+	kubectl get pods -o wide --watch --namespace=sales-system
 
 # ==============================================================================
 # Local Stuff

@@ -36,13 +36,25 @@ func main() {
 			continue
 		}
 
+		// If a service filter was provided, check.
+		if service != "" && m["service"] != service {
+			continue
+		}
+
+		// I like always having a traceid present in the logs.
+		traceID := "00000000-0000-0000-0000-000000000000"
+		if v, ok := m["traceid"]; ok {
+			traceID = fmt.Sprintf("%v", v)
+		}
+
 		// Build out the know portions of the log in the order
 		// I want them in.
 		b.Reset()
-		b.WriteString(fmt.Sprintf("%s: %s: %s: %s: %s: ",
+		b.WriteString(fmt.Sprintf("%s: %s: %s: %s: %s: %s: ",
 			m["service"],
 			m["ts"],
 			m["level"],
+			traceID,
 			m["caller"],
 			m["msg"],
 		))
