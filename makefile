@@ -36,6 +36,7 @@ kind-down:
 	kind delete cluster --name $(KIND_CLUSTER)
 
 kind-load:
+	cd zarf/k8s/kind/sales-pod; kustomize edit set image sales-api-image=sales-api-amd64:$(VERSION)
 	kind load docker-image sales-api-amd64:$(VERSION) --name $(KIND_CLUSTER)
 
 kind-apply:
