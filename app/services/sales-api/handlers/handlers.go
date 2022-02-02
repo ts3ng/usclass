@@ -2,11 +2,11 @@
 package handlers
 
 import (
-	"encoding/json"
 	"expvar"
 	"net/http"
 	"net/http/pprof"
 
+	"github.com/ardanlabs/service/app/services/sales-api/handlers/testgrp"
 	"github.com/dimfeld/httptreemux/v5"
 )
 
@@ -14,16 +14,7 @@ import (
 func APIMux() *httptreemux.ContextMux {
 	mux := httptreemux.NewContextMux()
 
-	h := func(w http.ResponseWriter, r *http.Request) {
-		status := struct {
-			Status string
-		}{
-			Status: "OK",
-		}
-		json.NewEncoder(w).Encode(status)
-	}
-
-	mux.Handle(http.MethodGet, "/test", h)
+	mux.Handle(http.MethodGet, "/test", testgrp.Test)
 
 	return mux
 }
