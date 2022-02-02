@@ -8,12 +8,14 @@ import (
 	"os"
 
 	"github.com/ardanlabs/service/app/services/sales-api/handlers/testgrp"
+	"github.com/ardanlabs/service/business/web/mid"
 	"github.com/ardanlabs/service/foundation/web"
+	"go.uber.org/zap"
 )
 
 // APIMux constructs a http.Handler with all application routes defined.
-func APIMux(shutdown chan os.Signal) *web.App {
-	app := web.NewApp(shutdown)
+func APIMux(shutdown chan os.Signal, log *zap.SugaredLogger) *web.App {
+	app := web.NewApp(shutdown, mid.Logger(log))
 
 	app.Handle(http.MethodGet, "/test", testgrp.Test)
 
