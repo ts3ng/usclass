@@ -5,18 +5,19 @@ import (
 	"expvar"
 	"net/http"
 	"net/http/pprof"
+	"os"
 
 	"github.com/ardanlabs/service/app/services/sales-api/handlers/testgrp"
-	"github.com/dimfeld/httptreemux/v5"
+	"github.com/ardanlabs/service/foundation/web"
 )
 
 // APIMux constructs a http.Handler with all application routes defined.
-func APIMux() *httptreemux.ContextMux {
-	mux := httptreemux.NewContextMux()
+func APIMux(shutdown chan os.Signal) *web.App {
+	app := web.NewApp(shutdown)
 
-	mux.Handle(http.MethodGet, "/test", testgrp.Test)
+	app.Handle(http.MethodGet, "/test", testgrp.Test)
 
-	return mux
+	return app
 }
 
 // DebugStandardLibraryMux registers all the debug routes from the standard library
