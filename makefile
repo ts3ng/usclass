@@ -98,3 +98,9 @@ help:
 tidy:
 	go mod tidy
 	go mod vendor
+
+# ==============================================================================
+# Running tests within the local computer
+
+test:
+	go test ./... -count=1
