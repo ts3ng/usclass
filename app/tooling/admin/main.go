@@ -79,13 +79,44 @@ func GenToken() error {
 	}
 
 	token := jwt.NewWithClaims(method, claims)
+	token.Header["kid"] = "1233455"
 
-	str, err := token.SignedString(privateKey)
+	tokenStr, err := token.SignedString(privateKey)
 	if err != nil {
 		return fmt.Errorf("signing token: %w", err)
 	}
 
-	fmt.Println(str)
+	fmt.Println(tokenStr)
+
+	fmt.Println("==============================================================")
+
+	keyFunc := func(t *jwt.Token) (interface{}, error) {
+		kid, ok := t.Header["kid"]
+		if !ok {
+			return nil, errors.New("missing key id (kid) in token header")
+		}
+		if kid != "1233455" {
+			return nil, fmt.Errorf("wrong kid: %s", kid)
+		}
+		return &privateKey.PublicKey, nil
+	}
+
+	// Create the token parser to use. The algorithm used to sign the JWT must be
+	// validated to avoid a critical vulnerability:
+	// https://auth0.com/blog/critical-vulnerabilities-in-json-web-token-libraries/
+	parser := jwt.NewParser(jwt.WithValidMethods([]string{"RS256"}))
+
+	var parseClaims Claims
+	parsedToken, err := parser.ParseWithClaims(tokenStr, &parseClaims, keyFunc)
+	if err != nil {
+		return fmt.Errorf("parsing token: %w", err)
+	}
+
+	if !parsedToken.Valid {
+		return errors.New("invalid token")
+	}
+
+	fmt.Println("Validated Token")
 
 	return nil
 }
