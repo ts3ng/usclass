@@ -73,6 +73,10 @@ func run(log *zap.SugaredLogger) error {
 			APIHost         string        `conf:"default:0.0.0.0:3000"`
 			DebugHost       string        `conf:"default:0.0.0.0:4000"`
 		}
+		Auth struct {
+			KeysFolder string `conf:"default:zarf/keys/"`
+			ActiveKID  string `conf:"default:54bb2165-71e1-41a6-af3e-7da4a0e1e2c1"`
+		}
 	}{
 		Version: conf.Version{
 			Build: build,
@@ -103,6 +107,18 @@ func run(log *zap.SugaredLogger) error {
 	log.Infow("startup", "config", out)
 
 	expvar.NewString("build").Set(build)
+
+	// =========================================================================
+	// Initialize authentication support
+
+	log.Infow("startup", "status", "initializing authentication support")
+
+	// Construct a key store based on the key files stored in
+	// the specified directory.
+	// ks, err := keystore.NewFS(os.DirFS(cfg.Auth.KeysFolder))
+	// if err != nil {
+	// 	return fmt.Errorf("reading keys: %w", err)
+	// }
 
 	// =========================================================================
 	// Start Debug Service
