@@ -1,11 +1,13 @@
 SHELL := /bin/bash
 
-# Used to install expvarmon program for metrics dashboard.
-# go install github.com/divan/expvarmon@latest
-#
 # Access metrics directly (4000) or through the sidecar (3001)
+# go install github.com/divan/expvarmon@latest
 # expvarmon -ports=":4000" -vars="build,requests,goroutines,errors,panics,mem:memstats.Alloc"
-
+#
+# For testing load on the service.
+# go install github.com/rakyll/hey@latest
+# hey -m GET -c 100 -n 10000 -H "Authorization: Bearer ${TOKEN}" http://localhost:3000/v1/users/1/2
+#
 # ==============================================================================
 # Building containers
 
