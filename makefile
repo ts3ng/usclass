@@ -18,6 +18,7 @@ SHELL := /bin/bash
 # go tool cover -html p.out
 #
 # curl http://localhost:4000/debug/liveness
+# curl http://localhost:4000/debug/readiness
 
 # ==============================================================================
 # Building containers
