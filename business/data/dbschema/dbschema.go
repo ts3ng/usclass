@@ -3,6 +3,7 @@ package dbschema
 
 import (
 	"context"
+	_ "embed" // Calls init function.
 	"fmt"
 
 	"github.com/ardanlabs/darwin"
