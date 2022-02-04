@@ -16,6 +16,8 @@ SHELL := /bin/bash
 #
 # go test -coverprofile p.out
 # go tool cover -html p.out
+#
+# curl http://localhost:4000/debug/liveness
 
 # ==============================================================================
 # Building containers
