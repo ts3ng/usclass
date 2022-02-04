@@ -1,3 +1,4 @@
+// This program performs administrative tasks for the garage sale service.
 package main
 
 import (
@@ -11,15 +12,120 @@ import (
 	"os"
 	"time"
 
+	"github.com/ardanlabs/conf/v3"
+	"github.com/ardanlabs/service/app/tooling/admin/commands"
 	"github.com/ardanlabs/service/business/sys/auth"
+	"github.com/ardanlabs/service/business/sys/database"
 	"github.com/ardanlabs/service/foundation/keystore"
+	"github.com/ardanlabs/service/foundation/logger"
 	"github.com/golang-jwt/jwt/v4"
 	"github.com/google/uuid"
+	"go.uber.org/zap"
 )
 
+// build is the git version of this program. It is set using build flags in the makefile.
+var build = "develop"
+
 func main() {
+
+	// Construct the application logger.
+	log, err := logger.New("ADMIN")
+	if err != nil {
+		fmt.Println(err)
+		os.Exit(1)
+	}
+	defer log.Sync()
+
+	// Perform the startup and shutdown sequence.
+	if err := run(log); err != nil {
+		if !errors.Is(err, commands.ErrHelp) {
+			log.Errorw("startup", "ERROR", err)
+		}
+		log.Sync()
+		os.Exit(1)
+	}
+}
+
+func run(log *zap.SugaredLogger) error {
+
+	// =========================================================================
+	// Configuration
+
+	cfg := struct {
+		conf.Version
+		Args conf.Args
+		DB   struct {
+			User       string `conf:"default:postgres"`
+			Password   string `conf:"default:postgres,mask"`
+			Host       string `conf:"default:localhost"`
+			Name       string `conf:"default:postgres"`
+			DisableTLS bool   `conf:"default:true"`
+		}
+	}{
+		Version: conf.Version{
+			Build: build,
+			Desc:  "copyright information here",
+		},
+	}
+
+	const prefix = "SALES"
+	help, err := conf.Parse(prefix, &cfg)
+	if err != nil {
+		if errors.Is(err, conf.ErrHelpWanted) {
+			fmt.Println(help)
+			return nil
+		}
+		return fmt.Errorf("parsing config: %w", err)
+	}
+
+	out, err := conf.String(&cfg)
+	if err != nil {
+		return fmt.Errorf("generating config for output: %w", err)
+	}
+	log.Infow("startup", "config", out)
+
+	// =========================================================================
+	// Commands
+
+	dbConfig := database.Config{
+		User:       cfg.DB.User,
+		Password:   cfg.DB.Password,
+		Host:       cfg.DB.Host,
+		Name:       cfg.DB.Name,
+		DisableTLS: cfg.DB.DisableTLS,
+	}
+
+	return processCommands(cfg.Args, log, dbConfig)
+}
+
+// processCommands handles the execution of the commands specified on
+// the command line.
+func processCommands(args conf.Args, log *zap.SugaredLogger, dbConfig database.Config) error {
+	switch args.Num(0) {
+	case "migrate":
+		if err := commands.Migrate(dbConfig); err != nil {
+			return fmt.Errorf("migrating database: %w", err)
+		}
+
+	case "seed":
+		if err := commands.Seed(dbConfig); err != nil {
+			return fmt.Errorf("seeding database: %w", err)
+		}
+
+	default:
+		fmt.Println("migrate: create the schema in the database")
+		fmt.Println("seed: add data to the database")
+		return commands.ErrHelp
+	}
+
+	return nil
+}
+
+// =============================================================================
+
+func xmain() {
 	//err := GenKey()
-	err := GenToken()
+	err := xGenToken()
 
 	if err != nil {
 		log.Fatalln(err)
@@ -31,7 +137,7 @@ type Claims struct {
 	Roles []string `json:"roles"`
 }
 
-func GenToken() error {
+func xGenToken() error {
 
 	// Construct a key store based on the key files stored in
 	// the specified directory.
@@ -79,7 +185,7 @@ func GenToken() error {
 	return nil
 }
 
-func GenTokenHack() error {
+func xGenTokenHack() error {
 
 	// Generate a new private key.
 	privateKey, err := rsa.GenerateKey(rand.Reader, 2048)
