@@ -12,15 +12,30 @@ import (
 	"github.com/ardanlabs/service/business/sys/auth"
 	"github.com/ardanlabs/service/business/web/mid"
 	"github.com/ardanlabs/service/foundation/web"
+	"github.com/jmoiron/sqlx"
 	"go.uber.org/zap"
 )
 
+// APIMuxConfig contains all the mandatory systems required by handlers.
+type APIMuxConfig struct {
+	Shutdown chan os.Signal
+	Log      *zap.SugaredLogger
+	Auth     *auth.Auth
+	DB       *sqlx.DB
+}
+
 // APIMux constructs a http.Handler with all application routes defined.
-func APIMux(shutdown chan os.Signal, log *zap.SugaredLogger, a *auth.Auth) *web.App {
-	app := web.NewApp(shutdown, mid.Logger(log), mid.Errors(log), mid.Metrics(), mid.Panics())
+func APIMux(cfg APIMuxConfig) *web.App {
+	app := web.NewApp(
+		cfg.Shutdown,
+		mid.Logger(cfg.Log),
+		mid.Errors(cfg.Log),
+		mid.Metrics(),
+		mid.Panics(),
+	)
 
 	app.Handle(http.MethodGet, "/test", testgrp.Test)
-	app.Handle(http.MethodGet, "/testauth", testgrp.Test, mid.Authenticate(a), mid.Authorize(auth.RoleAdmin))
+	app.Handle(http.MethodGet, "/testauth", testgrp.Test, mid.Authenticate(cfg.Auth), mid.Authorize(auth.RoleAdmin))
 
 	return app
 }
@@ -47,13 +62,14 @@ func DebugStandardLibraryMux() *http.ServeMux {
 // debug application routes for the service. This bypassing the use of the
 // DefaultServerMux. Using the DefaultServerMux would be a security risk since
 // a dependency could inject a handler into our service without us knowing it.
-func DebugMux(build string, log *zap.SugaredLogger) http.Handler {
+func DebugMux(build string, log *zap.SugaredLogger, db *sqlx.DB) http.Handler {
 	mux := DebugStandardLibraryMux()
 
 	// Register debug check endpoints.
 	cgh := checkgrp.Handlers{
 		Build: build,
 		Log:   log,
+		DB:    db,
 	}
 	mux.HandleFunc("/debug/readiness", cgh.Readiness)
 	mux.HandleFunc("/debug/liveness", cgh.Liveness)
